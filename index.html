@@ -215,29 +215,17 @@
    -------------------------------------------------------------
    Este arquivo é uma aplicação single-file (HTML/CSS/JS) sem
    dependências externas de build. Os dados de resposta são
-   gravados via window.storage (armazenamento chave-valor
-   compartilhado, disponível neste ambiente de artifact).
+   gravados numa planilha do Google Sheets, via um Web App do
+   Google Apps Script — gratuito, sem servidor próprio.
 
-   INTEGRAÇÃO COM BACKEND EXTERNO
-   Se esta página for publicada fora do ambiente de artifacts
-   (hospedada em um domínio próprio, por exemplo), `window.storage`
-   não existirá. Toda a gravação passa por `saveResponseToBackend()`
-   logo abaixo do estado global — troque o corpo dessa função pela
-   opção escolhida:
-     • Google Sheets (Apps Script): faça um POST para a URL do seu
-       Web App do Apps Script com `fetch(url, {method:'POST', body:
-       JSON.stringify(responseObj)})`. É a opção mais simples de
-       configurar sem custo e sem infraestrutura.
-     • Supabase: `const { data, error } = await supabase
-       .from('respostas').insert([responseObj])`. Melhor se você já
-       quer consultas SQL e um dashboard mais robusto depois.
-     • Firebase (Firestore): `await addDoc(collection(db,
-       'respostas'), responseObj)`. Boa opção se o restante do
-       produto já usa o ecossistema Firebase.
-   Qualquer uma das três funciona bem para o volume de uma pesquisa;
-   Google Sheets costuma ser o caminho mais rápido para começar,
-   Supabase/Firebase compensam se a coleta for crescer bastante.
+   CONFIGURAÇÃO (leia o passo a passo que acompanha este arquivo):
+   1. Crie a planilha e publique o Apps Script como Web App.
+   2. Cole a URL do Web App na constante SHEETS_WEBAPP_URL abaixo.
+   3. Publique este arquivo (Vercel) normalmente.
    ============================================================= */
+
+/* ---- Cole aqui a URL do seu Web App do Apps Script (passo a passo em anexo) ---- */
+const SHEETS_WEBAPP_URL = 'COLE_AQUI_A_URL_DO_SEU_WEB_APP';
 
 /* ---- URLs das duas experiências: troque pelas URLs reais ---- */
 const EXPERIENCE_1_URL = 'https://digital.sebraesp.com.br/';
@@ -245,8 +233,8 @@ const EXPERIENCE_2_URL = 'https://matchde-solucoes-7qk9.vercel.app/';
 
 /* ---- Nomes usados consistentemente em toda a pesquisa (não expor "Experiência 1/2") ---- */
 const EXP_NAME = {
-  1: 'Vitrine Sebrae',
-  2: 'Match de Soluções',
+  1: 'Catálogo de soluções',
+  2: 'Recomendações inteligentes',
 };
 
 function shapeSvg(shape, color){
@@ -493,10 +481,22 @@ function screenObrigado(){
 /* ============================= NAVEGAÇÃO / PERSISTÊNCIA ============================= */
 function goTo(screen){ S.screen=screen; window.scrollTo(0,0); render(); }
 
-/* Ponto único de gravação — ver instruções de integração no topo do arquivo. */
+/* Ponto único de gravação — envia a resposta para a planilha do Google Sheets. */
 async function saveResponseToBackend(responseObj){
+  if(!SHEETS_WEBAPP_URL || SHEETS_WEBAPP_URL.indexOf('COLE_AQUI') === 0){
+    console.error('SHEETS_WEBAPP_URL não configurada — siga o passo a passo de integração.');
+    return false;
+  }
   try{
-    await window.storage.set('response:'+responseObj.id, JSON.stringify(responseObj), true);
+    /* mode:'no-cors' + text/plain evita o preflight de CORS que o Apps Script
+       não responde corretamente; a resposta fica "opaca" (não dá pra ler o
+       corpo), mas a gravação na planilha acontece normalmente. */
+    await fetch(SHEETS_WEBAPP_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify(responseObj)
+    });
     return true;
   }catch(e){
     console.error('Falha ao salvar resposta', e);
@@ -533,18 +533,11 @@ async function loadAdminData(){
   S.admin.loading = true;
   render();
   try{
-    const list = await window.storage.list('response:', true);
-    const keys = (list && list.keys) || [];
-    const results = [];
-    for(const k of keys){
-      try{
-        const r = await window.storage.get(k, true);
-        if(r && r.value) results.push(JSON.parse(r.value));
-      }catch(e){ /* ignora chave com problema */ }
-    }
-    S.admin.data = results;
+    const res = await fetch(SHEETS_WEBAPP_URL, { method: 'GET' });
+    const results = await res.json();
+    S.admin.data = Array.isArray(results) ? results : [];
   }catch(e){
-    console.error(e);
+    console.error('Falha ao carregar respostas do painel', e);
     S.admin.data = [];
   }
   S.admin.loading = false;
