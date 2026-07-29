@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pesquisa: como você busca soluções?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F3F5F7;
+    --surface:#FFFFFF;
+    --ink:#1B2430;
+    --ink-soft:#5B6472;
+    --ink-faint:#8A93A0;
+    --border:#E1E4E9;
+    --accent:#2F5D62;
+    --accent-ink:#1E4448;
+    --accent-soft:#DCE7E6;
+    --amber:#B8763F;
+    --amber-soft:#F3E4D3;
+    --radius:14px;
+    --radius-sm:9px;
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'IBM Plex Mono', monospace;
+    --shadow: 0 1px 2px rgba(27,36,48,0.04), 0 8px 20px rgba(27,36,48,0.05);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  #root{
+    max-width:680px;
+    margin:0 auto;
+    padding:22px 18px 56px;
+    min-height:100vh;
+  }
+  h1,h2,h3{font-family:var(--font-display); font-weight:600; letter-spacing:-0.01em; margin:0 0 6px;}
+  h1{font-size:23px;}
+  h2{font-size:18px;}
+  h3{font-size:13.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-soft); font-weight:600;}
+  p{margin:0 0 12px; color:var(--ink-soft); font-size:14.5px;}
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:20px;
+    box-shadow:var(--shadow);
+  }
+  .stack{display:flex; flex-direction:column; gap:16px;}
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--accent);
+    background:var(--accent-soft);
+    display:inline-block;
+    padding:3px 9px;
+    border-radius:100px;
+    margin-bottom:10px;
+  }
+  .time-note{
+    font-family:var(--font-mono); font-size:11.5px; color:var(--ink-faint); margin:-4px 0 14px;
+  }
+
+  /* Progress bar */
+  .progress-wrap{margin:0 0 20px;}
+  .progress-label{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-family:var(--font-mono); font-size:11px; color:var(--ink-faint); margin-bottom:6px;
+  }
+  .progress-track{background:var(--border); height:5px; border-radius:100px; overflow:hidden;}
+  .progress-fill{background:var(--accent); height:100%; border-radius:100px; transition:width .3s ease;}
+
+  .field-label{font-size:13.5px; font-weight:600; color:var(--ink); margin-bottom:8px; display:block;}
+  .options{display:flex; flex-direction:column; gap:7px;}
+  .options.row{flex-direction:row; flex-wrap:wrap;}
+  .opt-btn{
+    text-align:left;
+    font-family:var(--font-body);
+    font-size:14px;
+    color:var(--ink);
+    background:var(--surface);
+    border:1.5px solid var(--border);
+    border-radius:var(--radius-sm);
+    padding:10px 14px;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .opt-btn:hover{border-color:var(--accent);}
+  .opt-btn.selected{border-color:var(--accent); background:var(--accent-soft); font-weight:600;}
+  .opt-btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .opt-btn.chip{padding:7px 13px; border-radius:100px; font-size:13px;}
+
+  textarea, input[type=text], input[type=number]{
+    width:100%;
+    font-family:var(--font-body);
+    font-size:14px;
+    color:var(--ink);
+    border:1.5px solid var(--border);
+    border-radius:var(--radius-sm);
+    padding:10px 12px;
+    resize:vertical;
+    background:var(--surface);
+  }
+  textarea:focus, input:focus{outline:2px solid var(--accent); outline-offset:1px;}
+
+  .likert-row{display:flex; flex-direction:column; gap:7px; margin-bottom:2px;}
+  .likert-scale{display:flex; gap:5px;}
+  .likert-btn{
+    flex:1; text-align:center; padding:8px 4px; border:1.5px solid var(--border);
+    border-radius:var(--radius-sm); cursor:pointer; font-family:var(--font-mono); font-size:12.5px; color:var(--ink-soft);
+    background:var(--surface); transition:.15s ease;
+  }
+  .likert-btn.selected{background:var(--accent); border-color:var(--accent); color:#fff;}
+  .likert-caption{display:flex; justify-content:space-between; font-size:11px; color:var(--ink-faint);}
+
+  .nav-row{display:flex; justify-content:space-between; align-items:center; margin-top:20px; gap:10px;}
+  .btn{
+    font-family:var(--font-body); font-weight:600; font-size:14px;
+    padding:11px 20px; border-radius:100px; border:none; cursor:pointer;
+    transition:transform .1s ease, opacity .15s ease;
+  }
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{background:var(--ink); color:#fff;}
+  .btn-primary:disabled{opacity:0.35; cursor:not-allowed;}
+  .btn-ghost{background:transparent; color:var(--ink-soft); border:1.5px solid var(--border);}
+  .btn-ghost:hover{color:var(--ink); border-color:var(--ink-soft);}
+  .btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+
+  /* Catalog experience */
+  .search-bar{
+    display:flex; align-items:center; gap:8px;
+    border:1.5px solid var(--border); border-radius:100px; padding:9px 14px;
+    background:#fff; margin-bottom:12px;
+  }
+  .search-bar input{border:none; padding:0; font-size:14px;}
+  .search-bar input:focus{outline:none;}
+
+  .chips{display:flex; gap:7px; flex-wrap:wrap; margin-bottom:14px;}
+
+  .grid-cards{display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;}
+  @media (max-width:520px){.grid-cards{grid-template-columns:1fr;}}
+  .sol-card{
+    border:1.5px solid var(--border); border-radius:var(--radius-sm); background:#fff;
+    padding:11px; cursor:pointer; transition:.15s ease; display:flex; flex-direction:column; gap:6px;
+  }
+  .sol-card:hover{border-color:var(--accent);}
+  .sol-badge{width:26px; height:26px; border-radius:7px; display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  .sol-title{font-weight:600; font-size:13.5px;}
+  .sol-cat{font-family:var(--font-mono); font-size:10px; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-faint);}
+  .sol-desc{font-size:12.5px; color:var(--ink-soft); margin:0;}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(27,36,48,0.45); display:flex; align-items:center; justify-content:center;
+    padding:20px; z-index:50;
+  }
+  .modal{
+    background:#fff; border-radius:var(--radius); padding:22px; max-width:400px; width:100%; box-shadow:var(--shadow);
+  }
+
+  /* External-experience card */
+  .external-card{
+    border:1.5px solid var(--border); border-radius:var(--radius); background:#FAFBFC;
+    padding:26px 20px; text-align:center;
+  }
+  .external-icon{
+    width:44px; height:44px; border-radius:12px; background:var(--accent-soft); color:var(--accent-ink);
+    display:flex; align-items:center; justify-content:center; margin:0 auto 14px;
+  }
+  .btn-launch{
+    background:var(--accent); color:#fff; font-family:var(--font-body); font-weight:600; font-size:14.5px;
+    padding:13px 26px; border-radius:100px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:8px;
+    transition:transform .1s ease, opacity .15s ease;
+  }
+  .btn-launch:hover{opacity:0.92;}
+  .btn-launch:active{transform:scale(0.97);}
+  .external-hint{font-size:12px; color:var(--ink-faint); margin-top:12px;}
+
+  .check-item{display:flex; align-items:flex-start; gap:9px; border:1.5px solid var(--border); border-radius:var(--radius-sm); padding:10px 13px; cursor:pointer;}
+  .check-item.selected{border-color:var(--accent); background:var(--accent-soft);}
+  .check-box{width:15px; height:15px; border:1.5px solid var(--ink-faint); border-radius:4px; flex-shrink:0; margin-top:1px; display:flex; align-items:center; justify-content:center;}
+  .check-item.selected .check-box{background:var(--accent); border-color:var(--accent);}
+
+  .admin-link{background:none; border:none; color:var(--ink-faint); font-size:12px; cursor:pointer; text-decoration:underline; margin-top:28px; display:block;}
+  .bar-track{background:var(--border); border-radius:100px; height:7px; overflow:hidden; flex:1;}
+  .bar-fill{background:var(--accent); height:100%;}
+  .stat-row{display:flex; align-items:center; gap:10px; margin-bottom:6px; font-size:12px;}
+  .stat-label{width:150px; flex-shrink:0; color:var(--ink-soft);}
+  .stat-val{width:36px; text-align:right; font-family:var(--font-mono); color:var(--ink-faint);}
+
+  .stat-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; margin:14px 0 20px;}
+  .stat-card{background:var(--accent-soft); border-radius:var(--radius-sm); padding:14px;}
+  .stat-card .num{font-family:var(--font-display); font-size:22px; font-weight:600; color:var(--accent-ink);}
+  .stat-card .lbl{font-size:11.5px; color:var(--ink-soft); margin-top:2px;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+/* =============================================================
+   PESQUISA DE UX — comparação entre catálogo e recomendações
+   -------------------------------------------------------------
+   Este arquivo é uma aplicação single-file (HTML/CSS/JS) sem
+   dependências externas de build. Os dados de resposta são
+   gravados via window.storage (armazenamento chave-valor
+   compartilhado, disponível neste ambiente de artifact).
+
+   INTEGRAÇÃO COM BACKEND EXTERNO
+   Se esta página for publicada fora do ambiente de artifacts
+   (hospedada em um domínio próprio, por exemplo), `window.storage`
+   não existirá. Toda a gravação passa por `saveResponseToBackend()`
+   logo abaixo do estado global — troque o corpo dessa função pela
+   opção escolhida:
+     • Google Sheets (Apps Script): faça um POST para a URL do seu
+       Web App do Apps Script com `fetch(url, {method:'POST', body:
+       JSON.stringify(responseObj)})`. É a opção mais simples de
+       configurar sem custo e sem infraestrutura.
+     • Supabase: `const { data, error } = await supabase
+       .from('respostas').insert([responseObj])`. Melhor se você já
+       quer consultas SQL e um dashboard mais robusto depois.
+     • Firebase (Firestore): `await addDoc(collection(db,
+       'respostas'), responseObj)`. Boa opção se o restante do
+       produto já usa o ecossistema Firebase.
+   Qualquer uma das três funciona bem para o volume de uma pesquisa;
+   Google Sheets costuma ser o caminho mais rápido para começar,
+   Supabase/Firebase compensam se a coleta for crescer bastante.
+   ============================================================= */
+
+/* ---- URLs das duas experiências: troque pelas URLs reais ---- */
+const EXPERIENCE_1_URL = 'https://digital.sebraesp.com.br/';
+const EXPERIENCE_2_URL = 'https://matchde-solucoes-7qk9.vercel.app/';
+
+/* ---- Nomes usados consistentemente em toda a pesquisa (não expor "Experiência 1/2") ---- */
+const EXP_NAME = {
+  1: 'Catálogo de soluções',
+  2: 'Recomendações inteligentes',
+};
+
+function shapeSvg(shape, color){
+  const s = 13;
+  const common = `width="${s}" height="${s}" viewBox="0 0 24 24" fill="none"`;
+  switch(shape){
+    case 'square': return `<svg ${common}><rect x="4" y="4" width="16" height="16" rx="2" fill="${color}"/></svg>`;
+    case 'triangle': return `<svg ${common}><polygon points="12,4 21,20 3,20" fill="${color}"/></svg>`;
+    case 'circle': return `<svg ${common}><circle cx="12" cy="12" r="9" fill="${color}"/></svg>`;
+    case 'diamond': return `<svg ${common}><rect x="6" y="6" width="12" height="12" rx="2" fill="${color}" transform="rotate(45 12 12)"/></svg>`;
+    case 'hexagon': return `<svg ${common}><polygon points="7,4 17,4 22,12 17,20 7,20 2,12" fill="${color}"/></svg>`;
+    case 'cross': return `<svg ${common}><rect x="10" y="3" width="4" height="18" rx="1.5" fill="${color}"/><rect x="3" y="10" width="18" height="4" rx="1.5" fill="${color}"/></svg>`;
+    default: return '';
+  }
+}
+
+/* ============================= ESTADO ============================= */
+const MAIN_STEPS = ['perfil','exp1','exp1post','exp2','exp2post','comparativo'];
+
+let S = {
+  screen: 'intro',
+  timers: {},
+  exp1: { opened:false },
+  exp2: { opened:false },
+  answers: {},
+  admin: { unlocked:false, data:null, loading:false },
+};
+
+function setA(key, val){ S.answers[key]=val; render(); }
+function toggleMulti(key, val){
+  const arr = S.answers[key] ? S.answers[key].slice() : [];
+  const i = arr.indexOf(val);
+  if(i>-1) arr.splice(i,1); else arr.push(val);
+  S.answers[key]=arr;
+  render();
+}
+function isSel(key,val){ return S.answers[key]===val; }
+function isMultiSel(key,val){ return (S.answers[key]||[]).includes(val); }
+
+/* ============================= COMPONENTES REUTILIZÁVEIS ============================= */
+function progressBar(){
+  const idx = MAIN_STEPS.indexOf(S.screen);
+  if(idx<0) return '';
+  const pct = ((idx+1)/MAIN_STEPS.length)*100;
+  return `<div class="progress-wrap">
+    <div class="progress-label"><span>Etapa ${idx+1} de ${MAIN_STEPS.length}</span></div>
+    <div class="progress-track"><div class="progress-fill" style="width:${pct}%"></div></div>
+  </div>`;
+}
+
+function optButton(key, value, label, opts={}){
+  const sel = opts.multi ? isMultiSel(key,value) : isSel(key,value);
+  const cls = opts.chip ? 'opt-btn chip' : 'opt-btn';
+  const action = opts.multi ? `toggleMulti('${key}','${esc(value)}')` : `setA('${key}','${esc(value)}')`;
+  return `<button class="${cls}${sel?' selected':''}" onclick="${action}">${label}</button>`;
+}
+
+function esc(s){ return String(s).replace(/'/g,"\\'"); }
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function likert(key, question, leftLabel, rightLabel){
+  const val = S.answers[key];
+  let scale = '<div class="likert-scale">';
+  for(let i=1;i<=5;i++){
+    scale += `<button class="likert-btn${val===i?' selected':''}" onclick="setA('${key}',${i})">${i}</button>`;
+  }
+  scale += '</div>';
+  return `<div class="likert-row">
+    <label class="field-label">${question}</label>
+    ${scale}
+    <div class="likert-caption"><span>${leftLabel}</span><span>${rightLabel}</span></div>
+  </div>`;
+}
+
+function textArea(key, placeholder){
+  const val = S.answers[key] || '';
+  return `<textarea rows="3" placeholder="${placeholder}" oninput="S.answers['${key}']=this.value" onblur="render()">${escHtml(val)}</textarea>`;
+}
+
+function navRow(backFn, nextFn, nextLabel, disabled){
+  return `<div class="nav-row">
+    ${backFn ? `<button class="btn btn-ghost" onclick="${backFn}">Voltar</button>` : '<span></span>'}
+    <button class="btn btn-primary" ${disabled?'disabled':''} onclick="${nextFn}">${nextLabel||'Continuar'}</button>
+  </div>`;
+}
+
+/* ============================= TELAS ============================= */
+function screenIntro(){
+  return `<div class="stack">
+    <div class="card">
+      <span class="eyebrow">Pesquisa de experiência do usuário</span>
+      <h1>Como você busca soluções para o seu negócio?</h1>
+      <p class="time-note">Tempo estimado: menos de 3 minutos</p>
+      <p>Você vai passar por duas formas diferentes de buscar uma solução e responder algumas perguntas rápidas sobre cada uma.</p>
+      ${navRow(null, "goTo('perfil')", 'Começar')}
+    </div>
+    <button class="admin-link" onclick="openAdmin()">Painel de resultados</button>
+  </div>`;
+}
+
+function screenPerfil(){
+  const idadeOk = S.answers.idade !== undefined && S.answers.idade !== '' && Number(S.answers.idade) > 0 && Number(S.answers.idade) <= 120;
+  const ok = idadeOk && S.answers.dispositivo;
+  return `<div class="card">
+    ${progressBar()}
+    <h2>Sobre você</h2>
+    <div class="stack">
+      <div>
+        <label class="field-label" for="idade">Qual é a sua idade?</label>
+        <input
+          type="text"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          autocomplete="off"
+          id="idade"
+          name="idade"
+          placeholder="Ex.: 23"
+          maxlength="3"
+          value="${escHtml(S.answers.idade || '')}"
+          oninput="S.answers.idade=this.value.replace(/[^0-9]/g,'').slice(0,3); render();"
+        >
+      </div>
+      <div>
+        <label class="field-label">Você prefere acessar pelo celular ou pelo computador?</label>
+        <div class="options row">
+          ${['Celular','Computador','Uso os dois igualmente'].map(v=>optButton('dispositivo',v,v,{chip:true})).join('')}
+        </div>
+      </div>
+    </div>
+    ${navRow(null, "startExp1()", 'Continuar', !ok)}
+  </div>`;
+}
+
+function startExp1(){
+  S.timers.exp1start = Date.now();
+  S.exp1 = { opened:false };
+  goTo('exp1');
+}
+
+/* ---- Experiência 1: abre a plataforma real em nova aba (mesmo padrão da Experiência 2) ---- */
+function screenExp1(){
+  return `<div class="card">
+    ${progressBar()}
+    <h2>${EXP_NAME[1]}</h2>
+    <p>Agora, com a mesma necessidade em mente, use a opção abaixo para encontrar uma solução.</p>
+    <div class="external-card">
+      <div class="external-icon">${shapeSvg('circle', '#2F5D62')}</div>
+      <button class="btn-launch" onclick="launchExp1()">Explorar soluções</button>
+      <p class="external-hint">Abre em uma nova aba. Quando terminar, volte aqui para continuar.</p>
+    </div>
+    ${navRow(null, "confirmExp1()", 'Continuar', !S.exp1.opened)}
+  </div>`;
+}
+
+function launchExp1(){
+  window.open(EXPERIENCE_1_URL, '_blank', 'noopener');
+  S.exp1.opened = true;
+  render();
+}
+
+function confirmExp1(){
+  const elapsed = Date.now() - S.timers.exp1start;
+  S.timers.exp1ms = elapsed;
+  goTo('exp1post');
+}
+
+/* ---- Perguntas rápidas após cada experiência ---- */
+function screenExpPost(n){
+  const ok = ['facilidade','satisfacao'].every(k=>S.answers['exp'+n+'_'+k]);
+  return `<div class="card">
+    ${progressBar()}
+    <div class="stack">
+      ${likert('exp'+n+'_facilidade','O quanto foi fácil encontrar uma solução?','Nada fácil','Muito fácil')}
+      ${likert('exp'+n+'_satisfacao','Qual seu nível de satisfação geral com essa experiência?','Baixa','Alta')}
+    </div>
+    ${navRow(null, n===1 ? "goToExp2()" : "goTo('comparativo')", 'Continuar', !ok)}
+  </div>`;
+}
+
+function goToExp2(){
+  S.timers.exp2start = Date.now();
+  S.exp2 = { opened:false };
+  goTo('exp2');
+}
+
+/* ---- Experiência 2: abre a plataforma real em nova aba ---- */
+function screenExp2(){
+  return `<div class="card">
+    ${progressBar()}
+    <h2>${EXP_NAME[2]}</h2>
+    <p>Agora, com a mesma necessidade em mente, use a opção abaixo para encontrar uma solução.</p>
+    <div class="external-card">
+      <div class="external-icon">${shapeSvg('circle', '#2F5D62')}</div>
+      <button class="btn-launch" onclick="launchExp2()">Explorar recomendações</button>
+      <p class="external-hint">Abre em uma nova aba. Quando terminar, volte aqui para continuar.</p>
+    </div>
+    ${navRow(null, "confirmExp2()", 'Continuar', !S.exp2.opened)}
+  </div>`;
+}
+
+function launchExp2(){
+  window.open(EXPERIENCE_2_URL, '_blank', 'noopener');
+  S.exp2.opened = true;
+  render();
+}
+
+function confirmExp2(){
+  const elapsed = Date.now() - S.timers.exp2start;
+  S.timers.exp2ms = elapsed;
+  goTo('exp2post');
+}
+
+/* ---- Comparação direta ---- */
+function screenComparativo(){
+  const keys = ['maisRapida','maisConfiavel','maisFacil','usariaNovamente'];
+  const ok = keys.every(k=>S.answers[k]);
+  const opts = [EXP_NAME[1], EXP_NAME[2], 'Indiferente'];
+  return `<div class="card">
+    ${progressBar()}
+    <h2>Comparando as duas experiências</h2>
+    <div class="stack">
+      <div><label class="field-label">Qual experiência permitiu encontrar uma solução mais rapidamente?</label>
+        <div class="options row">${opts.map(v=>optButton('maisRapida',v,v,{chip:true})).join('')}</div></div>
+      <div><label class="field-label">Qual experiência transmitiu mais confiança?</label>
+        <div class="options row">${opts.map(v=>optButton('maisConfiavel',v,v,{chip:true})).join('')}</div></div>
+      <div><label class="field-label">Qual experiência foi mais fácil de usar?</label>
+        <div class="options row">${opts.map(v=>optButton('maisFacil',v,v,{chip:true})).join('')}</div></div>
+      <div><label class="field-label">Qual você usaria novamente?</label>
+        <div class="options row">${opts.map(v=>optButton('usariaNovamente',v,v,{chip:true})).join('')}</div></div>
+      <div><label class="field-label">O que fez você preferir essa experiência? (opcional)</label>${textArea('motivoPreferencia','Conte um pouco sobre sua escolha...')}</div>
+    </div>
+    ${navRow(null, "finalizar()", 'Enviar respostas', !ok)}
+  </div>`;
+}
+
+function screenObrigado(){
+  return `<div class="card">
+    <span class="eyebrow">Concluído</span>
+    <h2>Obrigado(a) pela participação!</h2>
+    <p>Suas respostas foram registradas de forma anônima e vão ajudar a entender melhor como pessoas empreendedoras preferem buscar soluções para o negócio.</p>
+  </div>`;
+}
+
+/* ============================= NAVEGAÇÃO / PERSISTÊNCIA ============================= */
+function goTo(screen){ S.screen=screen; window.scrollTo(0,0); render(); }
+
+/* Ponto único de gravação — ver instruções de integração no topo do arquivo. */
+async function saveResponseToBackend(responseObj){
+  try{
+    await window.storage.set('response:'+responseObj.id, JSON.stringify(responseObj), true);
+    return true;
+  }catch(e){
+    console.error('Falha ao salvar resposta', e);
+    return false;
+  }
+}
+
+async function finalizar(){
+  const responseObj = {
+    id: 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+    timestamp: new Date().toISOString(),
+    tempos: { exp1_ms: S.timers.exp1ms || null, exp2_ms: S.timers.exp2ms || null },
+    answers: S.answers,
+  };
+  await saveResponseToBackend(responseObj);
+  goTo('obrigado');
+}
+
+/* ============================= PAINEL DE RESULTADOS ============================= */
+const ADMIN_CODE = 'senhaforte'; // altere este código se quiser trocar a senha de acesso aos resultados
+
+function openAdmin(){
+  const code = prompt('Digite o código de acesso ao painel de resultados:');
+  if(code === ADMIN_CODE){
+    S.admin.unlocked = true;
+    S.screen = 'admin';
+    loadAdminData();
+  } else if(code !== null){
+    alert('Código incorreto.');
+  }
+}
+
+async function loadAdminData(){
+  S.admin.loading = true;
+  render();
+  try{
+    const list = await window.storage.list('response:', true);
+    const keys = (list && list.keys) || [];
+    const results = [];
+    for(const k of keys){
+      try{
+        const r = await window.storage.get(k, true);
+        if(r && r.value) results.push(JSON.parse(r.value));
+      }catch(e){ /* ignora chave com problema */ }
+    }
+    S.admin.data = results;
+  }catch(e){
+    console.error(e);
+    S.admin.data = [];
+  }
+  S.admin.loading = false;
+  render();
+}
+
+function avg(arr){ const v = arr.filter(x=>typeof x==='number' && !isNaN(x)); return v.length ? (v.reduce((a,b)=>a+b,0)/v.length) : null; }
+
+function countBy(arr){
+  const m = {};
+  arr.forEach(v=>{ if(v!==undefined && v!==null && v!=='') m[v]=(m[v]||0)+1; });
+  return m;
+}
+
+function screenAdmin(){
+  if(S.admin.loading){
+    return `<div class="card"><p>Carregando respostas...</p></div>`;
+  }
+  const data = S.admin.data || [];
+  const n = data.length;
+
+  const idades = data.map(r=>Number(r.answers.idade)).filter(x=>!isNaN(x) && x>0);
+  const t1 = data.map(r=>r.tempos && r.tempos.exp1_ms).filter(Boolean).map(ms=>ms/1000);
+  const t2 = data.map(r=>r.tempos && r.tempos.exp2_ms).filter(Boolean).map(ms=>ms/1000);
+
+  function statRow(label, val, max){
+    const pct = val==null ? 0 : Math.min(100, (val/max)*100);
+    return `<div class="stat-row"><div class="stat-label">${label}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><div class="stat-val">${val==null?'—':val.toFixed(1)}</div></div>`;
+  }
+
+  function distBlock(label, values){
+    const c = countBy(values);
+    const total = values.length || 1;
+    return `<div style="margin-bottom:16px;"><div class="field-label" style="margin-bottom:8px;">${label}</div>
+      ${Object.entries(c).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="stat-row"><div class="stat-label" title="${k}">${k}</div><div class="bar-track"><div class="bar-fill" style="width:${(v/total*100)}%"></div></div><div class="stat-val">${v}</div></div>`).join('') || '<p>Sem dados</p>'}
+    </div>`;
+  }
+
+  function openTextList(key){
+    const items = data.map(r=>r.answers[key]).filter(v=>v && v.trim());
+    if(!items.length) return '<p>Sem respostas ainda.</p>';
+    return '<ul>' + items.map(t=>`<li style="margin-bottom:6px;">${escHtml(t)}</li>`).join('') + '</ul>';
+  }
+
+  return `<div class="card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2 style="margin:0;">Painel de resultados</h2>
+      <button class="btn btn-ghost" onclick="loadAdminData()">Atualizar</button>
+    </div>
+    <p>${n} resposta${n===1?'':'s'} coletada${n===1?'':'s'} até agora.</p>
+
+    <div class="stat-cards">
+      <div class="stat-card"><div class="num">${n}</div><div class="lbl">Respostas</div></div>
+      <div class="stat-card"><div class="num">${avg(idades)!=null ? avg(idades).toFixed(0) : '—'}</div><div class="lbl">Idade média</div></div>
+      <div class="stat-card"><div class="num">${avg(t1)!=null ? avg(t1).toFixed(0)+'s' : '—'}</div><div class="lbl">Tempo médio · ${EXP_NAME[1]}</div></div>
+      <div class="stat-card"><div class="num">${avg(t2)!=null ? avg(t2).toFixed(0)+'s' : '—'}</div><div class="lbl">Tempo médio · ${EXP_NAME[2]}</div></div>
+    </div>
+
+    <h3>Dispositivo utilizado</h3>
+    ${distBlock('Dispositivo', data.map(r=>r.answers.dispositivo))}
+
+    <h3>Comparação direta entre as duas experiências</h3>
+    ${distBlock('Mais rápida', data.map(r=>r.answers.maisRapida))}
+    ${distBlock('Mais confiável', data.map(r=>r.answers.maisConfiavel))}
+    ${distBlock('Mais fácil de usar', data.map(r=>r.answers.maisFacil))}
+    ${distBlock('Usaria novamente', data.map(r=>r.answers.usariaNovamente))}
+
+    <h3>Respostas abertas</h3>
+    <p><strong>Motivo da preferência (comparativo):</strong></p>${openTextList('motivoPreferencia')}
+
+    <button class="btn btn-ghost" style="margin-top:20px;" onclick="exportJson()">Exportar dados brutos (JSON)</button>
+    <div class="nav-row"><button class="btn btn-ghost" onclick="goTo('intro')">Voltar ao início</button><span></span></div>
+  </div>`;
+}
+
+function exportJson(){
+  const data = S.admin.data || [];
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'respostas_pesquisa_ux.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+window.S = S;
+
+/* ============================= RENDER PRINCIPAL ============================= */
+function render(){
+  /* Preserva foco e posição do cursor do campo ativo: como o root inteiro é
+     recriado a cada render, sem isso o navegador perde o foco do input
+     (ex.: campo Idade) a cada tecla digitada. */
+  const activeEl = document.activeElement;
+  const activeId = (activeEl && activeEl.id) ? activeEl.id : null;
+  let selStart = null, selEnd = null;
+  if(activeEl && typeof activeEl.selectionStart === 'number'){
+    selStart = activeEl.selectionStart;
+    selEnd = activeEl.selectionEnd;
+  }
+
+  let html = '';
+  switch(S.screen){
+    case 'intro': html = screenIntro(); break;
+    case 'perfil': html = screenPerfil(); break;
+    case 'exp1': html = screenExp1(); break;
+    case 'exp1post': html = screenExpPost(1); break;
+    case 'exp2': html = screenExp2(); break;
+    case 'exp2post': html = screenExpPost(2); break;
+    case 'comparativo': html = screenComparativo(); break;
+    case 'obrigado': html = screenObrigado(); break;
+    case 'admin': html = screenAdmin(); break;
+    default: html = screenIntro();
+  }
+  document.getElementById('root').innerHTML = html;
+
+  if(activeId){
+    const el = document.getElementById(activeId);
+    if(el){
+      el.focus();
+      if(selStart !== null && el.setSelectionRange){
+        try{ el.setSelectionRange(selStart, selEnd); }catch(e){ /* tipo de input sem suporte a seleção */ }
+      }
+    }
+  }
+}
+
+render();
+</script>
+</body>
+</html>
